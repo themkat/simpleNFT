@@ -16,6 +16,7 @@ TODO: describe which is only applicable for local and not
 - Ganache (local only)
 - KScript
 - Web3j cli
+- curl and wget
 - jq (or just use sed?)
 
 

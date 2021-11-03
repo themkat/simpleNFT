@@ -9,7 +9,6 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.PngWriter
-import com.sksamuel.scrimage.nio.PngReader
 import com.sksamuel.scrimage.composite.AlphaComposite
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -31,6 +30,17 @@ import com.fasterxml.jackson.annotation.JsonInclude
  * Results will be found in the new directory called generated
  */
 
+fun printUsage() {
+	println("Usage: ")
+	println("./llamaGenerator.kts components_directory\n")
+	println("The components directory needs to have the following sub-directories with png-files:")
+	println(" - body")
+	println(" - neck_accessories")
+	println(" - face_accessories")
+	println(" - head_accessories")
+	println("as well as a file called cigarette.png that is conditionally added (can be omitted)")
+}
+
 // helpers to make below code cleaner
 fun getFileNamesWithPathInDirectory(directory : String) = File(directory)
 	.walk()
@@ -44,13 +54,9 @@ fun getFileNamesWithPathInDirectory(directory : String) = File(directory)
 	}
 	.toList();
 
-
-// TODO: so much cool stuff we can do with traits :O any cool things we can do with these llamas? personality type?
-// https://docs.opensea.io/docs/metadata-standards
+// NFT related data we will convert to JSON
 data class NftTrait(val trait_type : String, val value : Any, val display_type : String? = null)
 
-// TODO: should the descriptions be generated in any way?
-// TODO: any cool algorithm for generating cool names? and descriptions? based upon attributes maybe? 
 data class NftMetadata(val name : String,
 					   val attributes : List<NftTrait>,
 					   val description : String = "Llama...",
@@ -79,7 +85,7 @@ fun generateRandomBirthdayTimestamp() : Long {
 	return birthday.toEpochSecond(LocalTime.MIDNIGHT, ZoneOffset.UTC)
 }
 
-fun generateLlama(components : ComponentSystem, num : Int) {
+fun generateLlamaNft(components : ComponentSystem, num : Int) {
 	// TODO: maybe extract parts of this to some helper function to make it more readable.
 	// TODO: find a background or background color that can work?
 
@@ -105,13 +111,12 @@ fun generateLlama(components : ComponentSystem, num : Int) {
 	llama.output(PngWriter.NoCompression, File("$basePath/llama.png"))
 
 	
-	// TODO: generate metadata from a class? is there a minimal way of doing that? just use jackson fasterxml kotlin? Seems easy enough...
+	// Get attributes and create traits 
 	val bodyType = getAttributeNameFromComponentFileName(bodyFile)
 	val headAccessoryType = getAttributeNameFromComponentFileName(headAccessoryFile)
 	val neckAccessoryType = getAttributeNameFromComponentFileName(neckAccessoryFile)
 	val faceAccessoryType = getAttributeNameFromComponentFileName(faceAccessoryFile)
 	
-	// description: ... llama with a nice $bodyColor coat!
 	val bodyTrait = NftTrait("Coat", bodyType)
 	val headAccessoryTrait = NftTrait("Head accessory", headAccessoryType)
 	val neckAccessoryTrait = NftTrait("Neck accessory", neckAccessoryType)
@@ -125,20 +130,27 @@ fun generateLlama(components : ComponentSystem, num : Int) {
 	val birthdayTrait = NftTrait("birthday", generateRandomBirthdayTimestamp(), display_type = "date")
 	
 	// Maybe name should include the number?
+	// description: ... llama with a nice $bodyColor coat!
 	// Maybe cigarette or not can do something with the description as well?
 	// TODO: could we use year the llama was born in the description as well?
-	// This llama is getting old, he has seen some shit!
-	val metadata = NftMetadata("Cryptic Llama #$num", listOf(bodyTrait, headAccessoryTrait, neckAccessoryTrait, faceAccessoryTrait, personalityTrait, birthdayTrait))
+	// This llama is getting old, and have seen some shit!
+	val metadata = NftMetadata(name = "Cryptic Llama #$num",
+							   description = "Llama with a nice $bodyType coat. ",
+							   attributes = listOf(bodyTrait, headAccessoryTrait, neckAccessoryTrait, faceAccessoryTrait, personalityTrait, birthdayTrait))
 	
 	// write the metadata to file
 	// couldnt get the property to work for some reason (errors when running), so using setter instead...
 	val objectMapper = jacksonObjectMapper()
 	objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
-	objectMapper.writeValue(File("$basePath/metadata.json"), metadata)
+	objectMapper.writeValue(File("$basePath/metadataWIP.json"), metadata)
 }
 
 
 // TODO: maybe some error handling? just to make sure the user have given arguments. printUsage
+if(1 != args.size ) {
+	printUsage()
+	System.exit(1)
+}
 
 // TODO: generate the component system paths. traverse the desired folder. 
 val componentDirectory = args[0]
@@ -150,5 +162,5 @@ val faceAccessoryFiles = getFileNamesWithPathInDirectory("$componentDirectory/fa
 val componentSystem = ComponentSystem(bodyFiles, headAccessoryFiles, neckAccessoryFiles, faceAccessoryFiles)
 
 // TODO: make the directory generated
-generateLlama(componentSystem, 1)
-
+generateLlamaNft(componentSystem, 1)
+generateLlamaNft(componentSystem, 2)

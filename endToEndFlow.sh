@@ -1,18 +1,14 @@
 #!/bin/bash
 
-# TODO: print usage
 
 if [[ -z $WALLET_PRIVATE_KEY ]] then
    echo "WALLET_PRIVATE_KEY needs to be set to be able to connect to wallet!"
    exit 1
 fi
-   
-
-# TODO: more here
 
 
 # TODO: generate llamas
-
+./llamaGenerator.kts components
 
 # TODO: upload images to IPFS, then use those hashes in the metadata, then upload metadata, save hashes, inject those in smart contract
 
@@ -23,7 +19,7 @@ rm -rf @openzeppelin
 wget -qO- https://github.com/OpenZeppelin/openzeppelin-contracts/archive/refs/tags/v4.3.2.tar.gz | tar zxvf - 
 mv openzeppelin-contracts-4.3.2 @openzeppelin
 
-# TODO: compile contract if  
+# compile contract
 solc CrypticLlamaContract.sol --bin --abi --optimize -o clm
 
 # Generate Web3j stub

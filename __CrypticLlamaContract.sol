@@ -6,9 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract CrypticLlamaContract is ERC721URIStorage {
     constructor() ERC721("Cryptic Llama", "CLM") {
-		// TODO: wildcard that a script can use to insert minting lines
-		// #MINTING_GOING_ON#
-		mintToken(1, "someuri");
+        #MINTING_GOING_ON#
 	}
 
 	function mintToken(uint256 tokenId, string memory tokenUri) private {

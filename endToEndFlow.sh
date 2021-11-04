@@ -31,7 +31,7 @@ for llamaDir in generated/* ; do
 	cat $llamaDir/metadataWIP.json | sed -e "s/#SETLATER#/ipfs\:\/\/$imageHash/" > $llamaDir/metadata.json
 
 	# upload the metadata
-	jsonHash=$(curl -X POST -H "Authorization: Bearer $PINATA_JWT" --data-binary "@$llamaDir/metadata.json" https://api.pinata.cloud/pinning/pinJSONToIPFS | jq -r '.IpfsHash')
+	jsonHash=$(curl -X POST -H "Authorization: Bearer $PINATA_JWT" -H "Content-Type: application/json" --data-binary "@$llamaDir/metadata.json" https://api.pinata.cloud/pinning/pinJSONToIPFS | jq -r '.IpfsHash')
 	
 	# put a call to mint this NFT in the contract
 	cat CrypticLlamaContract.sol | sed -e "s/#MINTING_GOING_ON#/mintToken($num, \"ipfs\:\/\/$jsonHash\");\\n        #MINTING_GOING_ON#/" > CrypticLlamaContract.sol_new

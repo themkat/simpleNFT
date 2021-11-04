@@ -55,7 +55,7 @@ solc CrypticLlamaContract.sol --bin --abi --optimize -o clm
 web3j generate solidity -a=clm/CrypticLlamaContract.abi -b=clm/CrypticLlamaContract.bin -o=. -p= 
 
 # Warning: Extremely hacky!! Build a Maven dependency of the contract to be able to use it in KScript (Did not know KScript could not have Java deps using Include to include file!!!)
-jbang export mavenrepo -Dgroup=net.themkat.simplenft -Dartifact=cryptic-llama-contract -Dversion=1.0 --deps=org.web3j:core:4.8.7 CrypticLlamaContract.java
+jbang export mavenrepo --force -Dgroup=net.themkat.simplenft -Dartifact=cryptic-llama-contract -Dversion=1.0 --deps=org.web3j:core:4.8.7 CrypticLlamaContract.java
 
 # Deploy contract
 ./deployContract.kts $WALLET_PRIVATE_KEY $BLOCKCHAIN_URL

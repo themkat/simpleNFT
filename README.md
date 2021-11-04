@@ -16,6 +16,7 @@ TODO: describe which is only applicable for local and not
 - Ganache (local only)
 - KScript
 - Web3j cli
+- jbang (to export generated Java file from web3j as a Maven dependency that is usable in KScript)
 - curl and wget
 - jq (or just use sed?)
 

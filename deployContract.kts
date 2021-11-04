@@ -27,5 +27,6 @@ val web3j = Web3j.build(if(null == blockchainUrl)
 						else
 						HttpService(blockchainUrl))
 val credentials = Credentials.create(privateKey)
-CrypticLlamaContract.deploy(web3j, credentials, DefaultGasProvider()).send()
+val contract = CrypticLlamaContract.deploy(web3j, credentials, DefaultGasProvider()).send()
+println("\nContract address: ${contract.contractAddress}")
 web3j.shutdown()

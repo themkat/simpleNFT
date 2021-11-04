@@ -6,7 +6,9 @@ import org.web3j.crypto.Credentials
 import org.web3j.tx.gas.DefaultGasProvider
 
 //DEPS org.web3j:core:4.8.7
-//INCLUDE CrypticLlamaContract.java
+//DEPS net.themkat.simplenft:cryptic-llama-contract:1.0
+// DURING DEV INCLUDE CrypticLlamaContract.java
+// uncomment the above DEPS line for it in that case...
 
 // web3j stub CrypticLlamaContract.java must have been generated for this class to run
 

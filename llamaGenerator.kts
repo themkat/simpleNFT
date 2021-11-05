@@ -26,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonInclude
  * 
  * Usage:
  * ./llamaGenerator.kts component_directory  ...
- * TODO: describe usage 
  * Results will be found in the new directory called generated
  */
 
@@ -76,6 +75,10 @@ class ComponentSystem(val bodyFiles : List<String>,
 	}
 }
 
+// reads the image file in the format we need. 
+// copy is due to converting to int representation, because of overlay not being pleased with float representation
+fun readImageFile(imageFile : String) = ImmutableImage.loader().fromFile(imageFile).copy(BufferedImage.TYPE_INT_ARGB)
+
 fun getAttributeNameFromComponentFileName(componentFileName : String ) = componentFileName.substring(componentFileName.lastIndexOf("/")+1, componentFileName.lastIndexOf(".")).replace('_', ' ')
 
 fun generateRandomBirthdayTimestamp() : Long {
@@ -85,21 +88,25 @@ fun generateRandomBirthdayTimestamp() : Long {
 	return birthday.toEpochSecond(LocalTime.MIDNIGHT, ZoneOffset.UTC)
 }
 
-fun generateLlamaNft(components : ComponentSystem, num : Int) {
-	// TODO: maybe extract parts of this to some helper function to make it more readable.
-	// TODO: find a background or background color that can work?
+fun createDescription(color : String,
+					  birthdayTimestamp : Long,
+					  personality : String) : String {
+	val JANUARY_1990 = 631152000
 
+	// limited set of rare attributes create cooler descriptions :) 
+	return "Llama with a nice $color coat.${if (birthdayTimestamp < JANUARY_1990) " Quite old, and have seen some shit!" else ""} ${if ("Pervert" == personality) " Might want to keep an extra eye on this one, you never know!" else if("Cool" == personality) " Llamas are just too cool for school!" else ""}"
+}
+
+fun generateLlamaNft(components : ComponentSystem, num : Int) {
 	val bodyFile = components.bodyFiles.random()
 	val headAccessoryFile = components.headAccessoryFiles.random()
 	val neckAccessoryFile = components.neckAccessoryFiles.random()
 	val faceAccessoryFile = components.faceAccessoryFiles.random()
 	
-	// load random components
-	// copy is due to converting to int representation, because of overlay not being pleased with float representation
-	val body = ImmutableImage.loader().fromFile(bodyFile).copy(BufferedImage.TYPE_INT_ARGB)
-	val headAccessory = ImmutableImage.loader().fromFile(headAccessoryFile).copy(BufferedImage.TYPE_INT_ARGB)
-	val neckAccessory = ImmutableImage.loader().fromFile(neckAccessoryFile).copy(BufferedImage.TYPE_INT_ARGB)
-	val faceAccessory = ImmutableImage.loader().fromFile(faceAccessoryFile).copy(BufferedImage.TYPE_INT_ARGB)
+	val body = readImageFile(bodyFile)
+	val headAccessory = readImageFile(headAccessoryFile)
+	val neckAccessory = readImageFile(neckAccessoryFile)
+	val faceAccessory = readImageFile(faceAccessoryFile)
 	// TODO: load cigratte conditionally
 	
 	// actually creating the final image
@@ -111,31 +118,23 @@ fun generateLlamaNft(components : ComponentSystem, num : Int) {
 	llama.output(PngWriter.NoCompression, File("$basePath/llama.png"))
 
 	
-	// Get attributes and create traits 
-	val bodyType = getAttributeNameFromComponentFileName(bodyFile)
-	val headAccessoryType = getAttributeNameFromComponentFileName(headAccessoryFile)
-	val neckAccessoryType = getAttributeNameFromComponentFileName(neckAccessoryFile)
-	val faceAccessoryType = getAttributeNameFromComponentFileName(faceAccessoryFile)
-	
-	val bodyTrait = NftTrait("Coat", bodyType)
-	val headAccessoryTrait = NftTrait("Head accessory", headAccessoryType)
-	val neckAccessoryTrait = NftTrait("Neck accessory", neckAccessoryType)
-	val faceAccessoryTrait = NftTrait("Face accessory", faceAccessoryType)
+	// Get attributes and create traits
+	val color = getAttributeNameFromComponentFileName(bodyFile)
+	val bodyTrait = NftTrait("Coat", color)
+	val headAccessoryTrait = NftTrait("Head accessory", getAttributeNameFromComponentFileName(headAccessoryFile))
+	val neckAccessoryTrait = NftTrait("Neck accessory", getAttributeNameFromComponentFileName(neckAccessoryFile))
+	val faceAccessoryTrait = NftTrait("Face accessory", getAttributeNameFromComponentFileName(faceAccessoryFile))
 
-	// TODO: maybe create a description based upon these? and maybe one other? Then it would be cool and dynamic
-	val personality = listOf("Laid back", "Cool", "Lame", "Pervert", "Polite", "Rude").random()
+	val personality = listOf("Laid back", "Cool", "Lame", "Pervert", "Polite", "Rude", "Outgoing").random()
 	val personalityTrait = NftTrait("Personality", personality)
 
 	// generate a fun little birthday for the llama that users can have fun with in OpenSea
-	val birthdayTrait = NftTrait("birthday", generateRandomBirthdayTimestamp(), display_type = "date")
+	val birthdayTimestamp = generateRandomBirthdayTimestamp()
+	val birthdayTrait = NftTrait("birthday", birthdayTimestamp, display_type = "date")
 	
-	// Maybe name should include the number?
-	// description: ... llama with a nice $bodyColor coat!
-	// Maybe cigarette or not can do something with the description as well?
-	// TODO: could we use year the llama was born in the description as well?
-	// This llama is getting old, and have seen some shit!
+	// metadata
 	val metadata = NftMetadata(name = "Cryptic Llama #$num",
-							   description = "Llama with a nice $bodyType coat. ",
+							   description = createDescription(color = color, birthdayTimestamp = birthdayTimestamp, personality = personality),
 							   attributes = listOf(bodyTrait, headAccessoryTrait, neckAccessoryTrait, faceAccessoryTrait, personalityTrait, birthdayTrait))
 	
 	// write the metadata to file
@@ -146,13 +145,11 @@ fun generateLlamaNft(components : ComponentSystem, num : Int) {
 }
 
 
-// TODO: maybe some error handling? just to make sure the user have given arguments. printUsage
 if(1 != args.size ) {
 	printUsage()
 	System.exit(1)
 }
-
-// TODO: generate the component system paths. traverse the desired folder. 
+ 
 val componentDirectory = args[0]
 // TODO: generate these inside the component system instead? 
 val bodyFiles = getFileNamesWithPathInDirectory("$componentDirectory/body")

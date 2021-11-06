@@ -37,7 +37,6 @@ fun printUsage() {
 	println(" - neck_accessories")
 	println(" - face_accessories")
 	println(" - head_accessories")
-	println("as well as a file called cigarette.png that is conditionally added (can be omitted)")
 }
 
 // helpers to make below code cleaner
@@ -97,7 +96,7 @@ fun createDescription(color : String,
 	return "Llama with a nice $color coat.${if (birthdayTimestamp < JANUARY_1990) " Quite old, and have seen some shit!" else ""} ${if ("Pervert" == personality) " Might want to keep an extra eye on this one, you never know!" else if("Cool" == personality) " Llamas are just too cool for school!" else ""}"
 }
 
-fun generateLlamaNft(components : ComponentSystem, num : Int) {
+fun generateLlamaNft(components : ComponentSystem, num : Int) : NftMetadata {
 	val bodyFile = components.bodyFiles.random()
 	val headAccessoryFile = components.headAccessoryFiles.random()
 	val neckAccessoryFile = components.neckAccessoryFiles.random()
@@ -107,7 +106,6 @@ fun generateLlamaNft(components : ComponentSystem, num : Int) {
 	val headAccessory = readImageFile(headAccessoryFile)
 	val neckAccessory = readImageFile(neckAccessoryFile)
 	val faceAccessory = readImageFile(faceAccessoryFile)
-	// TODO: load cigratte conditionally
 	
 	// actually creating the final image
 	val llama = body.overlay(headAccessory).overlay(neckAccessory).overlay(faceAccessory)
@@ -115,7 +113,7 @@ fun generateLlamaNft(components : ComponentSystem, num : Int) {
 	// make the directory for this particular result
 	val basePath = "generated/$num" 
 	File(basePath).mkdirs()
-	llama.output(PngWriter.NoCompression, File("$basePath/llama.png"))
+	llama.output(PngWriter.MaxCompression, File("$basePath/llama.png"))
 
 	
 	// Get attributes and create traits
@@ -124,7 +122,7 @@ fun generateLlamaNft(components : ComponentSystem, num : Int) {
 	val headAccessoryTrait = NftTrait("Head accessory", getAttributeNameFromComponentFileName(headAccessoryFile))
 	val neckAccessoryTrait = NftTrait("Neck accessory", getAttributeNameFromComponentFileName(neckAccessoryFile))
 	val faceAccessoryTrait = NftTrait("Face accessory", getAttributeNameFromComponentFileName(faceAccessoryFile))
-
+	
 	val personality = listOf("Laid back", "Cool", "Lame", "Pervert", "Polite", "Rude", "Outgoing").random()
 	val personalityTrait = NftTrait("Personality", personality)
 
@@ -142,6 +140,8 @@ fun generateLlamaNft(components : ComponentSystem, num : Int) {
 	val objectMapper = jacksonObjectMapper()
 	objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
 	objectMapper.writeValue(File("$basePath/metadataWIP.json"), metadata)
+
+	return metadata
 }
 
 
@@ -151,13 +151,19 @@ if(1 != args.size ) {
 }
  
 val componentDirectory = args[0]
-// TODO: generate these inside the component system instead? 
+
 val bodyFiles = getFileNamesWithPathInDirectory("$componentDirectory/body")
 val headAccessoryFiles = getFileNamesWithPathInDirectory("$componentDirectory/head_accessories")
 val neckAccessoryFiles = getFileNamesWithPathInDirectory("$componentDirectory/neck_accessories")
 val faceAccessoryFiles = getFileNamesWithPathInDirectory("$componentDirectory/face_accessories")
 val componentSystem = ComponentSystem(bodyFiles, headAccessoryFiles, neckAccessoryFiles, faceAccessoryFiles)
 
-// TODO: make the directory generated
-generateLlamaNft(componentSystem, 1)
-generateLlamaNft(componentSystem, 2)
+// very ugly algorithm to make the probability of two llamas looking identical lower
+val metadataImageCollection = mutableListOf<List<NftTrait>>()
+for(num in 1..10) {
+	var metadataImgAttributes = generateLlamaNft(componentSystem, num).attributes.subList(0, 4)
+	while(metadataImageCollection.contains(metadataImgAttributes)) {
+		metadataImgAttributes = generateLlamaNft(componentSystem, num).attributes.subList(0, 4)
+	}
+	metadataImageCollection.add(metadataImgAttributes)
+}

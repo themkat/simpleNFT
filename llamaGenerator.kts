@@ -160,7 +160,7 @@ val componentSystem = ComponentSystem(bodyFiles, headAccessoryFiles, neckAccesso
 
 // very ugly algorithm to make the probability of two llamas looking identical lower
 val metadataImageCollection = mutableListOf<List<NftTrait>>()
-for(num in 1..10) {
+for(num in 1..150) {
 	var metadataImgAttributes = generateLlamaNft(componentSystem, num).attributes.subList(0, 4)
 	while(metadataImageCollection.contains(metadataImgAttributes)) {
 		metadataImgAttributes = generateLlamaNft(componentSystem, num).attributes.subList(0, 4)
